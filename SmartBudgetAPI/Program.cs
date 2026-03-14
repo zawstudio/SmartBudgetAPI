@@ -95,11 +95,13 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Configure CORS
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:3000" };
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("DefaultPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -123,7 +125,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+app.UseCors("DefaultPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
