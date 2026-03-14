@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using SmartBudgetAPI.Application.DTOs.Auth;
 using SmartBudgetAPI.Domain.Entities;
 using SmartBudgetAPI.Domain.Interfaces;
@@ -13,15 +13,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
+    private readonly IEncryptionService _encryptionService;
 
     public RegisterCommandHandler(
         IUnitOfWork unitOfWork, 
         IPasswordHasher passwordHasher, 
-        IJwtService jwtService)
+        IJwtService jwtService,
+        IEncryptionService encryptionService)
     {
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
+        _encryptionService = encryptionService;
     }
 
     public async Task<AuthResponseDto> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -42,9 +45,9 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
             Id = Guid.NewGuid(),
             Email = dto.Email,
             PasswordHash = _passwordHasher.HashPassword(dto.Password),
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            PhoneNumber = dto.PhoneNumber,
+            FirstName = _encryptionService.Encrypt(dto.FirstName),
+            LastName = _encryptionService.Encrypt(dto.LastName),
+            PhoneNumber = !string.IsNullOrEmpty(dto.PhoneNumber) ? _encryptionService.Encrypt(dto.PhoneNumber) : null,
             DefaultCurrency = dto.DefaultCurrency,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -65,10 +68,10 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, AuthRespo
             {
                 Id = user.Id,
                 Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                FullName = user.FullName,
-                PhoneNumber = user.PhoneNumber,
+                FirstName = _encryptionService.Decrypt(user.FirstName),
+                LastName = _encryptionService.Decrypt(user.LastName),
+                FullName = $"{_encryptionService.Decrypt(user.FirstName)} {_encryptionService.Decrypt(user.LastName)}",
+                PhoneNumber = !string.IsNullOrEmpty(user.PhoneNumber) ? _encryptionService.Decrypt(user.PhoneNumber) : null,
                 DefaultCurrency = user.DefaultCurrency,
                 IsActive = user.IsActive,
                 CreatedAt = user.CreatedAt

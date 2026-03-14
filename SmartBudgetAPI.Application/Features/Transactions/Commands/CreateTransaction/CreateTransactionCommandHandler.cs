@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MediatR;
 using SmartBudgetAPI.Application.DTOs.Transactions;
 using SmartBudgetAPI.Domain.Entities;
@@ -50,6 +50,47 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
         };
 
         await _unitOfWork.Transactions.AddAsync(transaction, cancellationToken);
+
+        if (transaction.Type == SmartBudgetAPI.Domain.Enums.TransactionType.Expense)
+        {
+            var budget = await _unitOfWork.Budgets.FirstOrDefaultAsync(
+                b => b.UserId == request.UserId && 
+                b.CategoryId == transaction.CategoryId && 
+                b.StartDate <= transaction.TransactionDate && 
+                b.EndDate >= transaction.TransactionDate, 
+                cancellationToken);
+
+            if (budget != null)
+            {
+                var totalSpent = await _unitOfWork.Transactions.FindAsync(
+                    t => t.UserId == request.UserId && 
+                    t.CategoryId == transaction.CategoryId && 
+                    t.Type == SmartBudgetAPI.Domain.Enums.TransactionType.Expense &&
+                    t.TransactionDate >= budget.StartDate && 
+                    t.TransactionDate <= budget.EndDate,
+                    cancellationToken);
+
+                var currentTotal = totalSpent.Sum(t => t.Amount);
+                if (currentTotal > budget.LimitAmount)
+                {
+                    var alert = new BudgetAlert
+                    {
+                        Id = Guid.NewGuid(),
+                        BudgetId = budget.Id,
+                        UserId = request.UserId,
+                        Message = $"Budget exceeded for category {category.Name}. Limit: {budget.LimitAmount}, Current: {currentTotal}",
+                        PercentageUsed = (currentTotal / budget.LimitAmount) * 100,
+                        CurrentSpending = currentTotal,
+                        BudgetLimit = budget.LimitAmount,
+                        Status = SmartBudgetAPI.Domain.Enums.AlertStatus.Triggered,
+                        TriggeredAt = DateTime.UtcNow,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _unitOfWork.BudgetAlerts.AddAsync(alert, cancellationToken);
+                }
+            }
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new TransactionDto

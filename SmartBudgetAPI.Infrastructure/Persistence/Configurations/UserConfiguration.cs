@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SmartBudgetAPI.Domain.Entities;
 
@@ -25,14 +25,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.FirstName)
             .IsRequired()
-            .HasMaxLength(50);
+            .HasMaxLength(255);
 
         builder.Property(u => u.LastName)
             .IsRequired()
-            .HasMaxLength(50);
+            .HasMaxLength(255);
 
         builder.Property(u => u.PhoneNumber)
-            .HasMaxLength(20);
+            .HasMaxLength(255);
 
         builder.Property(u => u.DefaultCurrency)
             .IsRequired()

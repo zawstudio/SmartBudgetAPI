@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using SmartBudgetAPI.Application.DTOs.Auth;
 using SmartBudgetAPI.Domain.Interfaces;
 
@@ -12,15 +12,18 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
+    private readonly IEncryptionService _encryptionService;
 
     public LoginCommandHandler(
         IUnitOfWork unitOfWork, 
         IPasswordHasher passwordHasher, 
-        IJwtService jwtService)
+        IJwtService jwtService,
+        IEncryptionService encryptionService)
     {
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
+        _encryptionService = encryptionService;
     }
 
     public async Task<AuthResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -57,10 +60,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponseDto
             {
                 Id = user.Id,
                 Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                FullName = user.FullName,
-                PhoneNumber = user.PhoneNumber,
+                FirstName = _encryptionService.Decrypt(user.FirstName),
+                LastName = _encryptionService.Decrypt(user.LastName),
+                FullName = $"{_encryptionService.Decrypt(user.FirstName)} {_encryptionService.Decrypt(user.LastName)}",
+                PhoneNumber = !string.IsNullOrEmpty(user.PhoneNumber) ? _encryptionService.Decrypt(user.PhoneNumber) : null,
                 DefaultCurrency = user.DefaultCurrency,
                 IsActive = user.IsActive,
                 LastLoginAt = user.LastLoginAt,
