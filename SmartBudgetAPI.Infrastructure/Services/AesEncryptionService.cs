@@ -56,7 +56,7 @@ public class AesEncryptionService : IEncryptionService
         }
         catch
         {
-            return cipherText; // Fallback if data is not encrypted
+            return cipherText;
         }
     }
 }

@@ -33,14 +33,25 @@ public class ExceptionMiddleware
                 UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
                 KeyNotFoundException => (int)HttpStatusCode.NotFound,
                 ArgumentException => (int)HttpStatusCode.BadRequest,
+                FluentValidation.ValidationException => (int)HttpStatusCode.BadRequest,
                 _ => (int)HttpStatusCode.InternalServerError
             };
 
             context.Response.StatusCode = statusCode;
 
+            List<string>? errors = null;
+            if (ex is FluentValidation.ValidationException valEx)
+            {
+                errors = valEx.Errors.Select(e => e.ErrorMessage).ToList();
+            }
+            else if (_env.IsDevelopment())
+            {
+                errors = new List<string> { ex.StackTrace ?? "" };
+            }
+
             var response = ApiResponse<object>.FailureResponse(
-                _env.IsDevelopment() ? ex.Message : "An unexpected error occurred.",
-                _env.IsDevelopment() ? new List<string> { ex.StackTrace ?? "" } : null
+                _env.IsDevelopment() || ex is FluentValidation.ValidationException ? ex.Message : "An unexpected error occurred.",
+                errors
             );
 
             var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

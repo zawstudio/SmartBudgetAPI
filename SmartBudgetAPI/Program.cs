@@ -9,7 +9,6 @@ using SmartBudgetAPI.Application;
 using SmartBudgetAPI.Infrastructure;
 using SmartBudgetAPI.Middleware;
 
-// Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
