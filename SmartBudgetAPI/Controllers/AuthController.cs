@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SmartBudgetAPI.Application.DTOs.Auth;
 using SmartBudgetAPI.Application.DTOs.Common;
@@ -32,16 +32,9 @@ public class AuthController : ControllerBase
     [SwaggerResponse(400, "Invalid input data")]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register([FromBody] RegisterDto registerDto)
     {
-        try
-        {
-            var command = new RegisterCommand(registerDto);
-            var result = await _mediator.Send(command);
-            return Ok(ApiResponse<AuthResponseDto>.SuccessResponse(result, "User registered successfully"));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ApiResponse<AuthResponseDto>.FailureResponse(ex.Message));
-        }
+        var command = new RegisterCommand(registerDto);
+        var result = await _mediator.Send(command);
+        return Ok(ApiResponse<AuthResponseDto>.SuccessResponse(result, "User registered successfully"));
     }
 
     /// <summary>
@@ -53,20 +46,9 @@ public class AuthController : ControllerBase
     [SwaggerResponse(401, "Invalid credentials")]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login([FromBody] LoginDto loginDto)
     {
-        try
-        {
-            var command = new LoginCommand(loginDto);
-            var result = await _mediator.Send(command);
-            return Ok(ApiResponse<AuthResponseDto>.SuccessResponse(result, "Login successful"));
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(ApiResponse<AuthResponseDto>.FailureResponse(ex.Message));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ApiResponse<AuthResponseDto>.FailureResponse(ex.Message));
-        }
+        var command = new LoginCommand(loginDto);
+        var result = await _mediator.Send(command);
+        return Ok(ApiResponse<AuthResponseDto>.SuccessResponse(result, "Login successful"));
     }
 }
 

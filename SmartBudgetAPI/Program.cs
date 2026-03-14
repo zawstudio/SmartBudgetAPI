@@ -4,19 +4,25 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
 using System.Text;
+using Serilog;
 using SmartBudgetAPI.Application;
 using SmartBudgetAPI.Infrastructure;
+using SmartBudgetAPI.Middleware;
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
-builder.Services.AddControllers();
+builder.Host.UseSerilog();
 
-// Add Application and Infrastructure layers
+builder.Services.AddControllers();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Configure JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"];
 if (string.IsNullOrEmpty(jwtSecret) || jwtSecret == "YourSuperSecretKeyThatIsAtLeast32CharactersLongForHS256Algorithm" || jwtSecret.Length < 32)
 {
@@ -47,7 +53,6 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -155,6 +160,10 @@ app.Use(async (context, next) =>
     context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self'; object-src 'none'; frame-ancestors 'none';");
     await next();
 });
+
+app.UseMiddleware<ExceptionMiddleware>();
+
+app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 

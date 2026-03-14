@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,18 +40,11 @@ public class BudgetsController : ControllerBase
     [SwaggerResponse(400, "Invalid input data")]
     public async Task<ActionResult<ApiResponse<BudgetDto>>> Create([FromBody] CreateBudgetDto createBudgetDto)
     {
-        try
-        {
-            var userId = GetUserId();
-            var command = new CreateBudgetCommand(userId, createBudgetDto);
-            var result = await _mediator.Send(command);
-            return CreatedAtAction(nameof(Create), new { id = result.Id }, 
-                ApiResponse<BudgetDto>.SuccessResponse(result, "Budget created successfully"));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ApiResponse<BudgetDto>.FailureResponse(ex.Message));
-        }
+        var userId = GetUserId();
+        var command = new CreateBudgetCommand(userId, createBudgetDto);
+        var result = await _mediator.Send(command);
+        return CreatedAtAction(nameof(Create), new { id = result.Id }, 
+            ApiResponse<BudgetDto>.SuccessResponse(result, "Budget created successfully"));
     }
 }
 
