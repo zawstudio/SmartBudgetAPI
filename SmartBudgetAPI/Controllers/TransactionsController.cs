@@ -1,7 +1,8 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using SmartBudgetAPI.Application.DTOs.Common;
 using SmartBudgetAPI.Application.DTOs.Transactions;
 using SmartBudgetAPI.Application.Features.Transactions.Commands.CreateTransaction;
@@ -14,7 +15,8 @@ namespace SmartBudgetAPI.Controllers;
 /// Controller for transaction management
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 [Produces("application/json")]
 public class TransactionsController : ControllerBase
@@ -45,17 +47,10 @@ public class TransactionsController : ControllerBase
         [FromQuery] DateTime? endDate = null,
         [FromQuery] Guid? categoryId = null)
     {
-        try
-        {
-            var userId = GetUserId();
-            var query = new GetTransactionsPagedQuery(userId, pageNumber, pageSize, startDate, endDate, categoryId);
-            var result = await _mediator.Send(query);
-            return Ok(ApiResponse<PagedResultDto<TransactionDto>>.SuccessResponse(result));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ApiResponse<PagedResultDto<TransactionDto>>.FailureResponse(ex.Message));
-        }
+        var userId = GetUserId();
+        var query = new GetTransactionsPagedQuery(userId, pageNumber, pageSize, startDate, endDate, categoryId);
+        var result = await _mediator.Send(query);
+        return Ok(ApiResponse<PagedResultDto<TransactionDto>>.SuccessResponse(result));
     }
 
     /// <summary>
@@ -67,18 +62,11 @@ public class TransactionsController : ControllerBase
     [SwaggerResponse(400, "Invalid input data")]
     public async Task<ActionResult<ApiResponse<TransactionDto>>> Create([FromBody] CreateTransactionDto createTransactionDto)
     {
-        try
-        {
-            var userId = GetUserId();
-            var command = new CreateTransactionCommand(userId, createTransactionDto);
-            var result = await _mediator.Send(command);
-            return CreatedAtAction(nameof(GetPaged), new { id = result.Id }, 
-                ApiResponse<TransactionDto>.SuccessResponse(result, "Transaction created successfully"));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ApiResponse<TransactionDto>.FailureResponse(ex.Message));
-        }
+        var userId = GetUserId();
+        var command = new CreateTransactionCommand(userId, createTransactionDto);
+        var result = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetPaged), new { id = result.Id }, 
+            ApiResponse<TransactionDto>.SuccessResponse(result, "Transaction created successfully"));
     }
 }
 

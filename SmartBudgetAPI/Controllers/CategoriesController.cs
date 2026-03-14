@@ -1,7 +1,8 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using SmartBudgetAPI.Application.DTOs.Categories;
 using SmartBudgetAPI.Application.DTOs.Common;
 using SmartBudgetAPI.Application.Features.Categories.Commands.CreateCategory;
@@ -14,7 +15,8 @@ namespace SmartBudgetAPI.Controllers;
 /// Controller for category management
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 [Produces("application/json")]
 public class CategoriesController : ControllerBase
@@ -40,17 +42,10 @@ public class CategoriesController : ControllerBase
     [SwaggerResponse(200, "Categories retrieved successfully", typeof(ApiResponse<List<CategoryDto>>))]
     public async Task<ActionResult<ApiResponse<List<CategoryDto>>>> GetAll()
     {
-        try
-        {
-            var userId = GetUserId();
-            var query = new GetAllCategoriesQuery(userId);
-            var result = await _mediator.Send(query);
-            return Ok(ApiResponse<List<CategoryDto>>.SuccessResponse(result));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ApiResponse<List<CategoryDto>>.FailureResponse(ex.Message));
-        }
+        var userId = GetUserId();
+        var query = new GetAllCategoriesQuery(userId);
+        var result = await _mediator.Send(query);
+        return Ok(ApiResponse<List<CategoryDto>>.SuccessResponse(result));
     }
 
     /// <summary>
@@ -62,18 +57,11 @@ public class CategoriesController : ControllerBase
     [SwaggerResponse(400, "Invalid input data")]
     public async Task<ActionResult<ApiResponse<CategoryDto>>> Create([FromBody] CreateCategoryDto createCategoryDto)
     {
-        try
-        {
-            var userId = GetUserId();
-            var command = new CreateCategoryCommand(userId, createCategoryDto);
-            var result = await _mediator.Send(command);
-            return CreatedAtAction(nameof(GetAll), new { id = result.Id }, 
-                ApiResponse<CategoryDto>.SuccessResponse(result, "Category created successfully"));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ApiResponse<CategoryDto>.FailureResponse(ex.Message));
-        }
+        var userId = GetUserId();
+        var command = new CreateCategoryCommand(userId, createCategoryDto);
+        var result = await _mediator.Send(command);
+        return CreatedAtAction(nameof(GetAll), new { id = result.Id }, 
+            ApiResponse<CategoryDto>.SuccessResponse(result, "Category created successfully"));
     }
 }
 

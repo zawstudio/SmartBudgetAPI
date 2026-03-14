@@ -1,4 +1,6 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using SmartBudgetAPI.Application.DTOs.Auth;
 using SmartBudgetAPI.Application.DTOs.Common;
@@ -12,7 +14,8 @@ namespace SmartBudgetAPI.Controllers;
 /// Controller for authentication operations
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Produces("application/json")]
 public class AuthController : ControllerBase
 {

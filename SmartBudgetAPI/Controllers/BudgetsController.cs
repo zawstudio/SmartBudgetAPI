@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using SmartBudgetAPI.Application.DTOs.Budgets;
 using SmartBudgetAPI.Application.DTOs.Common;
@@ -13,7 +14,8 @@ namespace SmartBudgetAPI.Controllers;
 /// Controller for budget management
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 [Produces("application/json")]
 public class BudgetsController : ControllerBase
