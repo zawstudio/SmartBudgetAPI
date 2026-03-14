@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MediatR;
 using SmartBudgetAPI.Application.DTOs.Common;
 using SmartBudgetAPI.Application.DTOs.Transactions;
@@ -20,35 +20,16 @@ public class GetTransactionsPagedQueryHandler : IRequestHandler<GetTransactionsP
 
     public async Task<PagedResultDto<TransactionDto>> Handle(GetTransactionsPagedQuery request, CancellationToken cancellationToken)
     {
-        var allTransactions = await _unitOfWork.Transactions.FindAsync(
-            t => t.UserId == request.UserId && !t.IsDeleted,
+        var (transactions, totalCount) = await _unitOfWork.Transactions.GetFilteredPagedAsync(
+            request.UserId,
+            request.StartDate,
+            request.EndDate,
+            request.CategoryId,
+            request.PageNumber,
+            request.PageSize,
             cancellationToken);
 
-        var filtered = allTransactions.AsQueryable();
-
-        if (request.StartDate.HasValue)
-        {
-            filtered = filtered.Where(t => t.TransactionDate >= request.StartDate.Value);
-        }
-
-        if (request.EndDate.HasValue)
-        {
-            filtered = filtered.Where(t => t.TransactionDate <= request.EndDate.Value);
-        }
-
-        if (request.CategoryId.HasValue)
-        {
-            filtered = filtered.Where(t => t.CategoryId == request.CategoryId.Value);
-        }
-
-        var totalCount = filtered.Count();
         var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
-
-        var transactions = filtered
-            .OrderByDescending(t => t.TransactionDate)
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .ToList();
 
         var transactionDtos = transactions.Select(t => new TransactionDto
         {

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartBudgetAPI.Domain.Entities;
 using SmartBudgetAPI.Domain.Enums;
 using SmartBudgetAPI.Domain.Interfaces;
@@ -72,6 +72,33 @@ public class TransactionRepository : GenericRepository<Transaction>, ITransactio
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<(IEnumerable<Transaction> Items, int TotalCount)> GetFilteredPagedAsync(Guid userId, DateTime? startDate, DateTime? endDate, Guid? categoryId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = _dbSet
+            .AsNoTracking()
+            .Include(t => t.Category)
+            .Where(t => t.UserId == userId);
+
+        if (startDate.HasValue)
+            query = query.Where(t => t.TransactionDate >= startDate.Value);
+
+        if (endDate.HasValue)
+            query = query.Where(t => t.TransactionDate <= endDate.Value);
+
+        if (categoryId.HasValue)
+            query = query.Where(t => t.CategoryId == categoryId.Value);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        
+        var items = await query
+            .OrderByDescending(t => t.TransactionDate)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
     }
 
     public async Task<Dictionary<Guid, decimal>> GetSummaryCategoriesAsync(Guid userId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)

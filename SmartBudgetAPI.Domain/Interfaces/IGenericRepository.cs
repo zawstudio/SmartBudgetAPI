@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 
 namespace SmartBudgetAPI.Domain.Interfaces;
 
@@ -20,5 +20,6 @@ public interface IGenericRepository<T> where T : class
     void UpdateRange(IEnumerable<T> entities);
     void Remove(T entity);
     void RemoveRange(IEnumerable<T> entities);
+    IQueryable<T> Query();
 }
 

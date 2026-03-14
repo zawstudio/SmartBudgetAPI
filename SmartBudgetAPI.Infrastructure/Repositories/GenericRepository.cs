@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using SmartBudgetAPI.Domain.Interfaces;
 using SmartBudgetAPI.Infrastructure.Persistence;
@@ -78,6 +78,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     public void RemoveRange(IEnumerable<T> entities)
     {
         _dbSet.RemoveRange(entities);
+    }
+
+    public IQueryable<T> Query()
+    {
+        return _dbSet.AsQueryable();
     }
 }
 

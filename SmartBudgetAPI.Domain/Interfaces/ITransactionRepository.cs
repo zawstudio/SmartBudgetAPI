@@ -1,4 +1,4 @@
-﻿using SmartBudgetAPI.Domain.Entities;
+using SmartBudgetAPI.Domain.Entities;
 using SmartBudgetAPI.Domain.Enums;
 
 namespace SmartBudgetAPI.Domain.Interfaces;
@@ -14,6 +14,7 @@ public interface ITransactionRepository : IGenericRepository<Transaction>
     Task<IEnumerable<Transaction>> GetByTypeAsync(Guid userId, TransactionType type, CancellationToken cancellationToken = default);
     Task<decimal> GetTotalAmountAsync(Guid userId, DateTime startDate, DateTime endDate, TransactionType? type = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<Transaction>> GetPagedAsync(Guid userId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
+    Task<(IEnumerable<Transaction> Items, int TotalCount)> GetFilteredPagedAsync(Guid userId, DateTime? startDate, DateTime? endDate, Guid? categoryId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<Dictionary<Guid, decimal>> GetSummaryCategoriesAsync(Guid userId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default);
 }
 
