@@ -1,4 +1,4 @@
-﻿namespace SmartBudgetAPI.Domain.ValueObjects;
+namespace SmartBudgetAPI.Domain.ValueObjects;
 
 /// <summary>
 /// Value Object representing a monetary amount
@@ -8,7 +8,7 @@ public class Money : IEquatable<Money>
     public decimal Amount { get; private set; }
     public string Currency { get; private set; }
 
-    private Money() { }
+    private Money() { Currency = string.Empty; }
 
     public Money(decimal amount, string currency = "PLN")
     {
