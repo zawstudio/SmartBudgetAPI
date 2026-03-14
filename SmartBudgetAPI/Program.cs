@@ -137,7 +137,32 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<SmartBudgetAPI.Infrastructure.Persistence.ApplicationDbContext>();
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = Asp.Versioning.ApiVersionReader.Combine(
+        new Asp.Versioning.UrlSegmentApiVersionReader(),
+        new Asp.Versioning.HeaderApiVersionReader("x-api-version"),
+        new Asp.Versioning.MediaTypeApiVersionReader("x-api-version"));
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+});
+
+builder.Services.AddDistributedMemoryCache();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
@@ -163,6 +188,8 @@ app.Use(async (context, next) =>
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseSerilogRequestLogging();
+
+app.UseResponseCompression();
 
 app.UseHttpsRedirection();
 
