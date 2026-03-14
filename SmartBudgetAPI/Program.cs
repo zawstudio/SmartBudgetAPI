@@ -17,7 +17,11 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Configure JWT Authentication
-var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Secret not configured");
+var jwtSecret = builder.Configuration["Jwt:Secret"];
+if (string.IsNullOrEmpty(jwtSecret) || jwtSecret == "YourSuperSecretKeyThatIsAtLeast32CharactersLongForHS256Algorithm" || jwtSecret.Length < 32)
+{
+    throw new InvalidOperationException("JWT Secret is not configured securely. It must be at least 32 characters long and not the default value.");
+}
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "SmartBudgetAPI";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "SmartBudgetAPI";
 
@@ -59,10 +63,8 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
-    // Enable annotations
     c.EnableAnnotations();
 
-    // Add JWT Authentication to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
@@ -87,7 +89,6 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
-    // Include XML comments
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
@@ -96,7 +97,6 @@ builder.Services.AddSwaggerGen(c =>
     }
 });
 
-// Configure CORS
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:3000" };
 
 builder.Services.AddCors(options =>
@@ -133,23 +133,19 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
-// Health Checks
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartBudget API v1");
-        c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+        c.RoutePrefix = string.Empty;
     });
 }
 
-// Add Security Headers
 app.Use(async (context, next) =>
 {
     context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
